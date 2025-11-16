@@ -5,6 +5,8 @@ const AdminAuctionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('endTime');
+  const [showBidsModal, setShowBidsModal] = useState(false);
+  const [selectedAuction, setSelectedAuction] = useState<any>(null);
 
   const [stats] = useState({
     total: 89,
@@ -93,6 +95,11 @@ const AdminAuctionsPage = () => {
       views: 678
     }
   ]);
+
+  const handleShowBids = (auction: any) => {
+    setSelectedAuction(auction);
+    setShowBidsModal(true);
+  };
 
   const filteredAuctions = auctions.filter(auction => {
     const matchesSearch = auction.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -366,10 +373,10 @@ const AdminAuctionsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <button className="text-black hover:text-gray-700">
-                            <i className="ri-eye-line"></i>
-                          </button>
-                          <button className="text-black hover:text-gray-700">
+                          <button 
+                            onClick={() => handleShowBids(auction)}
+                            className="text-black hover:text-gray-700"
+                          >
                             <i className="ri-list-unordered"></i>
                           </button>
                           {auction.status === 'active' && (
@@ -386,6 +393,186 @@ const AdminAuctionsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* 入札一覧モーダル */}
+        {showBidsModal && selectedAuction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-black">入札一覧 - {selectedAuction.title}</h2>
+                <button
+                  onClick={() => setShowBidsModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <i className="ri-close-line text-xl"></i>
+                </button>
+              </div>
+
+              {/* オークション情報 */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">現在価格</p>
+                    <p className="text-lg font-bold text-black">¥{selectedAuction.currentPrice.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">入札数</p>
+                    <p className="text-lg font-bold text-black">{selectedAuction.bidCount}件</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">終了日時</p>
+                    <p className="text-lg font-bold text-black">{selectedAuction.endDate}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 入札一覧テーブル */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        入札者
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        入札額
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        入札日時
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ステータス
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        操作
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {[
+                      {
+                        id: 1,
+                        bidder: '田中太郎',
+                        email: 'tanaka@example.com',
+                        amount: 85000,
+                        bidTime: '2024-01-15 14:30',
+                        status: '最高額',
+                        isWinning: true
+                      },
+                      {
+                        id: 2,
+                        bidder: '佐藤花子',
+                        email: 'sato@example.com',
+                        amount: 82000,
+                        bidTime: '2024-01-15 13:45',
+                        status: '落札済み',
+                        isWinning: false
+                      },
+                      {
+                        id: 3,
+                        bidder: '鈴木一郎',
+                        email: 'suzuki@example.com',
+                        amount: 78000,
+                        bidTime: '2024-01-15 12:20',
+                        status: '落札済み',
+                        isWinning: false
+                      },
+                      {
+                        id: 4,
+                        bidder: '高橋美咲',
+                        email: 'takahashi@example.com',
+                        amount: 75000,
+                        bidTime: '2024-01-15 11:15',
+                        status: '落札済み',
+                        isWinning: false
+                      },
+                      {
+                        id: 5,
+                        bidder: '山田健太',
+                        email: 'yamada@example.com',
+                        amount: 70000,
+                        bidTime: '2024-01-15 10:30',
+                        status: '落札済み',
+                        isWinning: false
+                      }
+                    ].map((bid) => (
+                      <tr key={bid.id} className={bid.isWinning ? 'bg-green-50' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <i className="ri-user-line text-gray-600"></i>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-black">{bid.bidder}</div>
+                              <div className="text-sm text-gray-500">{bid.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-black">¥{bid.amount.toLocaleString()}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{bid.bidTime}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            bid.isWinning 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {bid.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-800">
+                              <i className="ri-mail-line"></i>
+                            </button>
+                            <button className="text-red-600 hover:text-red-800">
+                              <i className="ri-delete-bin-line"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 統計情報 */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-blue-600">総入札数</div>
+                  <div className="text-2xl font-bold text-blue-800">5件</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-green-600">最高入札額</div>
+                  <div className="text-2xl font-bold text-green-800">¥85,000</div>
+                </div>
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <div className="text-sm text-yellow-600">平均入札額</div>
+                  <div className="text-2xl font-bold text-yellow-800">¥78,000</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-purple-600">入札者数</div>
+                  <div className="text-2xl font-bold text-purple-800">5人</div>
+                </div>
+              </div>
+
+              {/* 閉じるボタン */}
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowBidsModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

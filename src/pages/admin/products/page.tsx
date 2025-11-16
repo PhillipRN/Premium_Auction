@@ -1,10 +1,36 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 
-const AdminProductsPage = () => {
+interface Product {
+  id: number;
+  name: string;
+  brand: string;
+  price: number;
+  status: string;
+  views: number;
+  bids: number;
+  image: string;
+  description?: string;
+  size?: string;
+  category?: string;
+}
+
+export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    brand: '',
+    description: '',
+    price: '',
+    size: '',
+    category: 'sneakers',
+    status: 'published',
+    images: [] as File[]
+  });
 
   const [products] = useState([
     {
@@ -110,8 +136,54 @@ const AdminProductsPage = () => {
     }
   };
 
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert('商品情報が更新されました！');
+    setShowEditModal(false);
+    setSelectedProduct(null);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setProductForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setProductForm(prev => ({
+        ...prev,
+        images: Array.from(e.target.files || [])
+      }));
+    }
+  };
+
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('新商品を保存:', productForm);
+    alert('商品が正常に追加されました！');
+    setShowAddModal(false);
+    setProductForm({
+      name: '',
+      brand: '',
+      description: '',
+      price: '',
+      size: '',
+      category: 'sneakers',
+      status: 'published',
+      images: []
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,7 +239,7 @@ const AdminProductsPage = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -284,13 +356,348 @@ const AdminProductsPage = () => {
                 </select>
               </div>
 
-              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 whitespace-nowrap cursor-pointer"
+              >
                 <i className="ri-add-line mr-2"></i>
                 新商品追加
               </button>
             </div>
           </div>
         </div>
+
+        {/* Add Product Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">新商品追加</h2>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    <i className="ri-close-line text-xl"></i>
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        商品名 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={productForm.name}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        placeholder="例: Air Jordan 1 Retro High OG"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        ブランド <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="brand"
+                        value={productForm.brand}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        placeholder="例: Nike"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      商品説明
+                    </label>
+                    <textarea
+                      name="description"
+                      value={productForm.description}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                      placeholder="商品の詳細説明を入力してください..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        開始価格 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={productForm.price}
+                        onChange={handleInputChange}
+                        required
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        placeholder="10000"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        サイズ
+                      </label>
+                      <input
+                        type="text"
+                        name="size"
+                        value={productForm.size}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        placeholder="例: 27.5cm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        カテゴリ
+                      </label>
+                      <select
+                        name="category"
+                        value={productForm.category}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                      >
+                        <option value="sneakers">スニーカー</option>
+                        <option value="limited">限定品</option>
+                        <option value="vintage">ヴィンテージ</option>
+                        <option value="collaboration">コラボレーション</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      商品画像
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">複数の画像を選択できます（推奨: 1200x1200px以上）</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      ステータス
+                    </label>
+                    <select
+                      name="status"
+                      value={productForm.status}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    >
+                      <option value="published">公開中</option>
+                      <option value="draft">下書き</option>
+                      <option value="sold">売却済み</option>
+                    </select>
+                  </div>
+
+                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap cursor-pointer"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 whitespace-nowrap cursor-pointer"
+                    >
+                      商品を追加
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 商品編集モーダル */}
+        {showEditModal && selectedProduct && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-black">商品編集</h3>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedProduct(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <i className="ri-close-line text-2xl"></i>
+                </button>
+              </div>
+
+              <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    商品名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={selectedProduct.name}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="商品名を入力"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ブランド <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={selectedProduct.brand}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="ブランド名を入力"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    商品説明
+                  </label>
+                  <textarea
+                    defaultValue={selectedProduct.description || ''}
+                    rows={4}
+                    maxLength={500}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+                    placeholder="商品の詳細説明を入力（最大500文字）"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      価格 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">¥</span>
+                      <input
+                        type="number"
+                        defaultValue={selectedProduct.price}
+                        required
+                        min="0"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      サイズ
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue={selectedProduct.size || ''}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                      placeholder="例: M, 26.5cm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    カテゴリ <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    defaultValue={selectedProduct.category || 'sneakers'}
+                    required
+                    className="w-full px-4 py-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
+                  >
+                    <option value="sneakers">スニーカー</option>
+                    <option value="bags">バッグ</option>
+                    <option value="watches">時計</option>
+                    <option value="accessories">アクセサリー</option>
+                    <option value="apparel">アパレル</option>
+                    <option value="other">その他</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    商品画像
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-black transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      id="edit-product-images"
+                    />
+                    <label htmlFor="edit-product-images" className="cursor-pointer">
+                      <i className="ri-image-add-line text-4xl text-gray-400 mb-2"></i>
+                      <p className="text-sm text-gray-600">クリックして画像を選択</p>
+                      <p className="text-xs text-gray-400 mt-1">複数選択可能（最大10枚）</p>
+                    </label>
+                  </div>
+                  {selectedProduct.image && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-2">現在の画像:</p>
+                      <img src={selectedProduct.image} alt={selectedProduct.name} className="w-20 h-20 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ステータス <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    defaultValue={selectedProduct.status}
+                    required
+                    className="w-full px-4 py-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
+                  >
+                    <option value="公開中">公開中</option>
+                    <option value="下書き">下書き</option>
+                    <option value="売却済み">売却済み</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-black text-white py-3 rounded-md hover:bg-gray-800 font-medium whitespace-nowrap cursor-pointer"
+                  >
+                    変更を保存
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setSelectedProduct(null);
+                    }}
+                    className="flex-1 bg-white text-gray-700 py-3 rounded-md border border-gray-300 hover:bg-gray-50 font-medium whitespace-nowrap cursor-pointer"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Products Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -368,14 +775,17 @@ const AdminProductsPage = () => {
                       {product.createdAt}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button className="text-black hover:text-gray-700">
+                      <div className="flex items-center justify-end gap-2">
+                        <button className="text-black hover:text-gray-700 cursor-pointer">
                           <i className="ri-eye-line"></i>
                         </button>
-                        <button className="text-black hover:text-gray-700">
+                        <button 
+                          onClick={() => handleEdit(product)}
+                          className="text-black hover:text-gray-700 cursor-pointer"
+                        >
                           <i className="ri-edit-line"></i>
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button className="text-red-600 hover:text-red-800 cursor-pointer">
                           <i className="ri-delete-bin-line"></i>
                         </button>
                       </div>
@@ -389,6 +799,4 @@ const AdminProductsPage = () => {
       </main>
     </div>
   );
-};
-
-export default AdminProductsPage;
+}
